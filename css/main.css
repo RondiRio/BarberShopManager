@@ -1,0 +1,635 @@
+/* Estilos Globais e Reset Básico */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #121212;
+    color: #FFFFFF;
+    line-height: 1.6;
+    display: flex; /* Para ajudar a empurrar o rodapé para baixo em páginas com pouco conteúdo */
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    width: 80%;
+    margin: 0 auto; /* Alterado de 'margin: auto' para centralização mais explícita */
+    overflow: hidden;
+    padding: 20px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #FFFFFF;
+}
+
+a {
+    color: #f39c12; /* Cor laranja padrão para links, pode ser sobrescrita */
+    text-decoration: none;
+}
+
+a:hover {
+    color: #FFFFFF;
+    text-decoration: underline;
+}
+
+/* Cabeçalho Principal */
+header {
+    background: #000000;
+    color: #FFFFFF;
+    padding-top: 30px;
+    min-height: 70px;
+    border-bottom: #FFFFFF 3px solid;
+    width: 100%;
+}
+
+header a {
+    color: #FFFFFF;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-size: 16px;
+}
+
+header ul {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    float: right;
+}
+
+header li {
+    display: inline;
+    padding: 0 20px 0 20px;
+}
+
+header #branding {
+    float: left;
+}
+
+header #branding h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+header .highlight,
+header nav ul li.current a { /* Para destacar "Barbearia" e o link da página atual */
+    color: #CCCCCC;
+    font-weight: bold;
+}
+
+header nav ul li a:hover {
+    color: #CCCCCC;
+    font-weight: bold;
+    text-decoration: none; /* Remove sublinhado do hover do menu se não desejar */
+}
+
+/* Seção de Título de Página Genérica */
+#page-title-section {
+    padding: 40px 0;
+    background-color: #1C1C1C;
+    text-align: center;
+    border-bottom: #000000 2px solid;
+}
+
+#page-title-section h1 {
+    font-size: 36px;
+    margin: 0;
+    color: #FFFFFF;
+    text-shadow: 1px 1px 2px #000000;
+}
+
+/* Conteúdo Principal e Seções Genéricas */
+.main-content-area, /* Usado em login, register, forgot_password */
+#main-content, /* Usado na index */
+.main-content-section { /* Usado em recomendações (página) */
+    flex-grow: 1; /* Para empurrar o rodapé para baixo */
+    padding: 30px 0;
+}
+.main-content-area { /* Para centralizar conteúdo como formulários */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.section { /* Usado na index para blocos de conteúdo */
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #1C1C1C;
+    border-radius: 5px;
+}
+
+.section h2,
+.section-title { /* Título dentro de seções ou de página */
+    color: #FFFFFF;
+    border-bottom: 2px solid #FFFFFF;
+    padding-bottom: 10px;
+    margin-top: 0;
+    margin-bottom: 30px;
+    font-size: 28px;
+    text-align: center;
+}
+
+.section p {
+    color: #E0E0E0;
+}
+
+/* Estilos para Formulários (Login, Registro, Recomendações, etc.) */
+.form-box, /* Usado em login, register, forgot_password */
+#recommendation-form-section { /* Usado na página de recomendações */
+    background-color: #1C1C1C;
+    padding: 30px 40px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(255,255,255,0.1);
+    width: 100%;
+    max-width: 450px; /* Largura máxima para caixas de formulário */
+    text-align: center;
+    margin: 20px auto; /* Adicionado para centralizar se não estiver em .main-content-area */
+}
+#recommendation-form-section { /* Ajuste específico se necessário */
+    max-width: none; /* Permite que o form de recomendação seja mais largo se precisar */
+}
+
+
+.form-box h1,
+#recommendation-form-section .section-title { /* Título dentro da caixa de formulário */
+    color: #FFFFFF;
+    margin-bottom: 25px;
+    font-size: 28px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 15px;
+}
+#recommendation-form-section .section-title {
+    font-size: 28px; /* Mantém o padrão de .section-title */
+    border-bottom: 2px solid #FFFFFF; /* Mantém o padrão de .section-title */
+}
+
+
+.form-group { /* Adicionado para agrupar label e input */
+    margin-bottom: 20px;
+}
+
+.form-box label,
+#recommendation-form label {
+    display: block;
+    text-align: left;
+    margin-bottom: 8px;
+    color: #E0E0E0;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.form-box input[type="text"],
+.form-box input[type="email"],
+.form-box input[type="password"],
+#recommendation-form input[type="text"],
+#recommendation-form select,
+#recommendation-form textarea {
+    width: calc(100% - 24px); /* Ajuste para padding */
+    padding: 12px;
+    border-radius: 4px;
+    border: 1px solid #444;
+    background-color: #282828;
+    color: #FFFFFF;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+/* Campos de formulário não precisam de margin-bottom individual se .form-group for usado */
+
+#recommendation-form textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-box input[type="text"]:focus,
+.form-box input[type="email"]:focus,
+.form-box input[type="password"]:focus,
+#recommendation-form input[type="text"]:focus,
+#recommendation-form select:focus,
+#recommendation-form textarea:focus {
+    outline: none;
+    border-color: #f39c12; /* Destaque laranja no foco */
+    box-shadow: 0 0 8px rgba(243, 156, 18, 0.3);
+}
+
+.form-box button[type="submit"],
+#recommendation-form button[type="submit"] {
+    width: 100%; /* Botões de formulário de login/registro ocupam largura total */
+    padding: 12px 20px;
+    background-color: #f39c12;
+    color: #000000;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+    margin-top: 5px;
+}
+#recommendation-form button[type="submit"] {
+    width: auto; /* Botão de recomendação pode ser menor */
+    display: block; /* Para centralizar se for auto e tiver margem */
+    margin-left: auto; /* Para centralizar se for auto */
+    margin-right: auto; /* Para centralizar se for auto */
+}
+
+
+.form-box button[type="submit"]:hover,
+#recommendation-form button[type="submit"]:hover {
+    background-color: #e67e22;
+    opacity: 0.9;
+}
+
+.form-links { /* Para links como "Esqueci senha", "Já tem conta?" */
+    margin-top: 20px;
+    font-size: 0.9em;
+}
+.form-links p {
+    margin-bottom: 10px;
+}
+.form-links a {
+    color: #f39c12;
+}
+
+/* Mensagens de Feedback (Sucesso/Erro) */
+.message {
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    text-align: left; /* Geralmente melhor para ler mensagens */
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+.message.success {
+    background-color: #27ae60;
+    color: white;
+    border: 1px solid #2ecc71;
+}
+.message.error {
+    background-color: #c0392b;
+    color: white;
+    border: 1px solid #e74c3c;
+}
+
+/* Estilos Específicos de Seções da Página Inicial (index.php) */
+#showcase {
+    min-height: 400px;
+    /* background: url('placeholder-barbershop.jpg') no-repeat center center/cover; Simplificado e centralizado */
+    /* background-position: 0 -400px; Removido, center center é mais flexível */
+    text-align: center;
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-bottom: #000000 3px solid; /* Era branco na sua versão original, mas preto pode dar mais contraste com o footer */
+}
+
+#showcase h1 {
+    font-size: 55px;
+    margin-bottom: 10px;
+    color: #FFFFFF;
+    text-shadow: 2px 2px 4px #000000;
+}
+
+#showcase p {
+    font-size: 20px;
+    color: #FFFFFF;
+    text-shadow: 1px 1px 2px #000000;
+}
+
+.history-emphasis {
+    font-style: italic;
+    color: #B0B0B0;
+}
+
+/* Estilos do Carrossel de Recomendações (index.php) */
+.carousel-container {
+    position: relative;
+    max-width: 700px;
+    margin: 30px auto; /* Adicionado margin-top */
+    overflow: hidden;
+    background-color: #282828;
+    padding: 20px;
+    border-radius: 5px;
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+}
+
+.carousel-slide {
+    display: none;
+    width: 100%;
+    text-align: center;
+}
+
+.carousel-slide.active {
+    display: block;
+}
+
+.carousel-slide p.recommendation-text {
+    font-size: 1.1em;
+    font-style: italic;
+    color: #FFFFFF;
+    margin-bottom: 10px;
+}
+
+.carousel-slide p.customer-name {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #CCCCCC;
+}
+
+.prev, .next { /* Botões Prev/Next do Carrossel */
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    width: auto;
+    padding: 16px;
+    margin-top: -22px;
+    color: white;
+    font-weight: bold;
+    font-size: 20px;
+    transition: 0.6s ease;
+    border-radius: 0 3px 3px 0;
+    user-select: none;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.next { right: 0; border-radius: 3px 0 0 3px; }
+.prev { left: 0; }
+
+.prev:hover, .next:hover {
+    background-color: rgba(255,255,255,0.3);
+}
+
+.dots-container { /* Pontos de Navegação do Carrossel */
+    text-align: center;
+    padding-top: 10px;
+}
+
+.dot {
+    cursor: pointer;
+    height: 13px;
+    width: 13px;
+    margin: 0 3px;
+    background-color: #777777;
+    border-radius: 50%;
+    display: inline-block;
+    transition: background-color 0.6s ease;
+}
+
+.active-dot, .dot:hover {
+    background-color: #FFFFFF;
+}
+
+/* Estilos para Listagem de Serviços e Produtos (servicos.php, produtos.php) */
+#services-list,
+#products-list {
+    padding: 30px 0;
+}
+
+.service-category, /* Pode ser usado para agrupar serviços se necessário */
+.product-category {
+    margin-bottom: 40px;
+}
+
+.service-category h2,
+.product-category h2 { /* Título da categoria de serviço/produto */
+    color: #FFFFFF;
+    border-bottom: 2px solid #FFFFFF;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    font-size: 28px;
+    text-align: center;
+}
+
+.service-item,
+.product-item {
+    background-color: #1C1C1C;
+    margin-bottom: 20px;
+    padding: 20px;
+    border-radius: 5px;
+    border-left: 5px solid #FFFFFF;
+}
+
+.service-item:hover,
+.product-item:hover {
+    border-left: 5px solid #CCCCCC;
+}
+
+.service-item h3,
+.product-item h3 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    color: #FFFFFF;
+    font-size: 22px;
+}
+
+.service-item .price,
+.product-item .price {
+    font-size: 20px;
+    font-weight: bold;
+    color: #CCCCCC;
+    margin-bottom: 10px;
+}
+
+.service-item .description,
+.product-item .description {
+    font-size: 16px;
+    color: #E0E0E0;
+}
+
+/* Estilos para Exibição de Recomendações (recomendacoes.php) */
+#recommendations-display {
+    margin-bottom: 40px;
+}
+
+.recommendation-item {
+    background-color: #1C1C1C;
+    margin-bottom: 20px;
+    padding: 20px;
+    border-radius: 5px;
+    border-left: 5px solid #FFFFFF;
+}
+
+.recommendation-item blockquote {
+    margin: 0 0 10px 0;
+    font-style: italic;
+    font-size: 1.1em;
+    color: #E0E0E0;
+}
+.recommendation-item .barber-name {
+    font-size: 0.9em;
+    color: #f39c12;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.recommendation-item .author-date {
+    text-align: right;
+    font-size: 0.9em;
+    color: #B0B0B0;
+}
+.recommendation-item .author-date strong {
+    color: #CCCCCC;
+}
+
+
+/* Rodapé (Baseado nos seus estilos mais recentes para o rodapé) */
+footer {
+    background-color: #000000;
+    color: #FFFFFF;
+    padding: 40px 0 20px 0;
+    border-top: 3px solid #FFFFFF;
+    font-size: 0.9em;
+    margin-top: auto; /* Ajuda a empurrar para baixo se o conteúdo for pouco */
+}
+
+.footer-container {
+    width: 85%;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 20px;
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 250px;
+    margin-bottom: 20px;
+}
+
+.footer-section h4 {
+    color: #f39c12;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    border-bottom: 1px solid #444;
+    padding-bottom: 8px;
+}
+
+.footer-section p {
+    color: #B0B0B0;
+    line-height: 1.7;
+    margin-bottom: 10px;
+}
+
+.footer-section.quick-links ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.footer-section.quick-links ul li {
+    margin-bottom: 8px;
+}
+
+.footer-section.quick-links ul li a {
+    color: #B0B0B0;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-section.quick-links ul li a:hover {
+    color: #FFFFFF;
+    text-decoration: underline;
+}
+
+.social-links a { /* Estilos para os ícones de redes sociais no rodapé */
+    color: #B0B0B0;
+    margin-right: 15px;
+    font-size: 1.5em;
+    transition: color 0.3s ease;
+}
+
+.social-links a:last-child {
+    margin-right: 0;
+}
+
+.social-links a:hover {
+    color: #f39c12;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid #333;
+    font-size: 0.85em;
+    color: #777;
+}
+
+/* Media Queries para Responsividade */
+@media(max-width: 768px){
+    .container {
+        width: 95%;
+    }
+
+    header #branding,
+    header nav,
+    header nav ul, /* Garante que a lista também seja centralizada */
+    header nav li {
+        float: none;
+        text-align: center;
+        width: 100%;
+    }
+    header nav ul {
+        margin-top: 10px; /* Espaço entre branding e nav em mobile */
+    }
+    header nav li {
+        display: block; /* Links do menu um abaixo do outro */
+        padding: 10px 0;
+    }
+
+    #page-title-section h1 { font-size: 28px; }
+    .section h2, .section-title { font-size: 24px; }
+
+    #showcase h1 { font-size: 40px; }
+    #showcase p { font-size: 18px; }
+
+    .carousel-container {
+        /* Ajustes para o carrossel se necessário em mobile */
+    }
+    .prev, .next {
+        font-size: 16px;
+        padding: 12px;
+    }
+    
+    .form-box,
+    #recommendation-form-section {
+        padding: 25px 20px;
+        margin-left: auto; /* Para centralizar com width: 95% do container */
+        margin-right: auto;
+    }
+    .form-box h1 { font-size: 24px; }
+    #recommendation-form input[type="text"],
+    #recommendation-form select,
+    #recommendation-form textarea,
+    #recommendation-form button[type="submit"] {
+        width: 100%; /* Garante que ocupem a largura total dentro do padding do form-box */
+    }
+    #recommendation-form button[type="submit"] {
+        text-align: center;
+    }
+
+
+    .service-item h3, .product-item h3 { font-size: 20px; }
+    .service-item .price, .product-item .price { font-size: 18px; }
+
+    /* Responsividade do Rodapé (já incluída na sua seleção, mas confirmando) */
+    .footer-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .footer-section {
+        min-width: 100%;
+        margin-bottom: 30px;
+    }
+    .social-links {
+        text-align: center;
+    }
+    .footer-section.quick-links ul {
+        padding-left: 0;
+    }
+}

@@ -1,0 +1,108 @@
+/* Estilos do Botão Sanduíche e Navegação Responsiva */
+header {
+    position: relative; /* Para posicionar o botão do menu corretamente */
+}
+/* Seus estilos existentes para .container, #branding, nav ul (desktop) devem permanecer */
+
+/* Estilo base para o botão do menu (hambúrguer) */
+.menu-toggle {
+    display: none; /* Escondido por padrão, aparece em telas menores */
+    flex-direction: column;
+    justify-content: space-around;
+    width: 30px;
+    height: 30px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1100; /* Garante que fique sobre outros elementos */
+    position: relative; /* Para alinhar no header se necessário */
+}
+
+.menu-toggle span {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background-color: #f39c12; /* Cor das barras do hambúrguer, ajuste conforme o design */
+    border-radius: 2px;
+    transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+    transform-origin: center;
+}
+
+/* Animação do Hambúrguer para "X" quando ativo */
+.menu-toggle.active span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+}
+
+.menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+    transform: translateX(-100%);
+}
+
+.menu-toggle.active span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+}
+
+/* Estilos da lista de navegação (desktop - você já deve ter algo similar) */
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex; /* Para layout horizontal em desktop */
+    align-items: center;
+}
+
+/* Em telas menores (ex: <= 768px) */
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: flex; /* Mostra o botão do menu */
+    }
+
+    nav ul {
+        /* Muda para layout de coluna, posicionado absolutamente */
+        flex-direction: column;
+        position: absolute;
+        top: 100%; /* Posiciona abaixo do header. Ajuste se seu header tiver altura fixa. */
+                   /* Se o seu header tiver padding, por exemplo 10px 0, e o h1 for 24px,
+                      a altura do header pode ser ~44-50px. 'top: 60px;' ou 'top: calc(100% + 5px);'
+                      pode ser um bom começo, ajuste conforme necessário. */
+        right: 20px; /* Alinha à direita do container do header */
+        background-color: #222; /* Fundo para o menu dropdown. Escolha uma cor que combine. */
+        border-radius: 4px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        width: 200px; /* Largura do menu dropdown */
+        z-index: 1000;
+
+        /* Animação de entrada/saída */
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+        padding: 10px 0; /* Espaçamento interno no dropdown */
+    }
+
+    nav ul.show { /* Classe adicionada via JavaScript para mostrar o menu */
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    nav ul li {
+        margin: 0;
+        width: 100%; /* Faz os itens ocuparem toda a largura do dropdown */
+        text-align: center; /* Centraliza o texto ou 'right' como no original */
+    }
+
+    nav ul li a {
+        display: block; /* Faz todo o item da lista ser clicável */
+        padding: 12px 20px; /* Espaçamento para melhor toque */
+        color: #fff; /* Cor do texto no dropdown */
+        text-decoration: none;
+    }
+     /* Você pode adicionar um hover para os links no dropdown também */
+    nav ul li a:hover,
+    nav ul li.current a { /* Mantém destaque no item atual */
+        background-color: #333;
+        color: #f39c12; /* Cor do hover/atual no dropdown */
+    }
+}

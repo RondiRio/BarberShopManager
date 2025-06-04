@@ -4,273 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barbearia JB - Desde 2005</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/toogle_menu.css">
+    <script src="js/toogle_menu.js"></script>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #121212; 
-            color: #FFFFFF; 
-            line-height: 1.6;
-        }
-
-        .container {
-            width: 80%;
-            margin: auto;
-            overflow: hidden;
-            padding: 20px;
-        }
-
-        header {
-            background: #000000;
-            color: #FFFFFF;
-            padding-top: 30px;
-            min-height: 70px;
-            border-bottom: #FFFFFF 3px solid;
-        }
-
-        header a {
-            color: #FFFFFF;
-            text-decoration: none;
-            text-transform: uppercase;
-            font-size: 16px;
-        }
-
-        header ul {
-            padding: 0;
-            margin: 0;
-            list-style: none;
-            float: right;
-        }
-
-        header li {
-            display: inline;
-            padding: 0 20px 0 20px;
-        }
-
-        header #branding {
-            float: left;
-        }
-
-        header #branding h1 {
-            margin: 0;
-            font-size: 28px;
-        }
-
-        header .highlight, header .current a {
-            color: #CCCCCC; /* Cinza claro para destaque */
-            font-weight: bold;
-        }
-
-        header a:hover {
-            color: #CCCCCC;
-            font-weight: bold;
-        }
-
-        #showcase {
-            min-height: 400px;
-            background: url('placeholder-barbershop.jpg') no-repeat 0 -400px; /* Substitua pela sua imagem */
-            background-size: cover;
-            background-position: center;
-            text-align: center;
-            color: #FFFFFF;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            border-bottom: #000000 3px solid;
-        }
-
-        #showcase h1 {
-            font-size: 55px;
-            margin-bottom: 10px;
-            color: #FFFFFF;
-            text-shadow: 2px 2px 4px #000000;
-        }
-
-        #showcase p {
-            font-size: 20px;
-            color: #FFFFFF;
-            text-shadow: 1px 1px 2px #000000;
-        }
-
-        #main-content {
-            padding: 30px 0;
-        }
-
-        .section {
-            margin-bottom: 30px;
-            padding: 20px;
-            background-color: #1C1C1C; /* Cinza muito escuro para seções */
-            border-radius: 5px;
-        }
-
-        .section h2 {
-            color: #FFFFFF;
-            border-bottom: 2px solid #FFFFFF;
-            padding-bottom: 10px;
-            margin-top: 0;
-            text-align: center; /* Centralizar títulos das seções */
-        }
-
-        .section p {
-            color: #E0E0E0; /* Cinza bem claro para parágrafos */
-        }
-
-        .history-emphasis {
-            font-style: italic;
-            color: #B0B0B0; /* Cinza médio para ênfase na história */
-        }
-
-        /* Estilos do Carrossel */
-        .carousel-container {
-            position: relative;
-            max-width: 700px; /* Ajuste a largura conforme necessário */
-            margin: auto;
-            overflow: hidden; /* Esconde slides que não estão ativos */
-            background-color: #282828; /* Fundo um pouco mais claro para o carrossel */
-            padding: 20px;
-            border-radius: 5px;
-            min-height: 150px; /* Altura mínima para acomodar o texto */
-            display: flex; /* Para centralizar verticalmente o conteúdo do slide */
-            align-items: center; /* Para centralizar verticalmente o conteúdo do slide */
-        }
-
-        .carousel-slide {
-            display: none; /* Esconde todos os slides por padrão */
-            width: 100%;
-            text-align: center;
-        }
-
-        .carousel-slide.active {
-            display: block; /* Mostra apenas o slide ativo */
-        }
-
-        .carousel-slide p.recommendation-text {
-            font-size: 1.1em;
-            font-style: italic;
-            color: #FFFFFF;
-            margin-bottom: 10px;
-        }
-
-        .carousel-slide p.customer-name {
-            font-size: 0.9em;
-            font-weight: bold;
-            color: #CCCCCC;
-        }
-
-        /* Botões Prev/Next */
-        .prev, .next {
-            cursor: pointer;
-            position: absolute;
-            top: 50%;
-            width: auto;
-            padding: 16px;
-            margin-top: -22px;
-            color: white;
-            font-weight: bold;
-            font-size: 20px;
-            transition: 0.6s ease;
-            border-radius: 0 3px 3px 0;
-            user-select: none;
-            background-color: rgba(0,0,0,0.5); /* Fundo semi-transparente */
-        }
-
-        .next {
-            right: 0;
-            border-radius: 3px 0 0 3px;
-        }
-        .prev {
-            left: 0;
-        }
-
-        .prev:hover, .next:hover {
-            background-color: rgba(255,255,255,0.3); /* Branco com transparência no hover */
-        }
-
-        /* Pontos de Navegação (opcional, mas bom para UX) */
-        .dots-container {
-            text-align: center;
-            padding-top: 10px;
-        }
-
-        .dot {
-            cursor: pointer;
-            height: 13px;
-            width: 13px;
-            margin: 0 3px;
-            background-color: #777777; /* Cinza para pontos inativos */
-            border-radius: 50%;
-            display: inline-block;
-            transition: background-color 0.6s ease;
-        }
-
-        .active-dot, .dot:hover {
-            background-color: #FFFFFF; /* Branco para ponto ativo/hover */
-        }
-        /* Fim dos Estilos do Carrossel */
-
-
-        footer {
-            padding: 20px;
-            margin-top: 20px;
-            color: #FFFFFF;
-            background-color: #000000;
-            text-align: center;
-            border-top: #FFFFFF 3px solid;
-        }
-
-        /* Para o menu de navegação simples */
-        nav ul {
-            list-style-type: none;
-            padding: 0;
-            text-align: center; /* Centraliza os itens do menu no header */
-        }
-        nav ul li {
-            display: inline;
-            margin-right: 20px;
-        }
-        nav ul li a {
-            color: #fff;
-            text-decoration: none;
-        }
-        nav ul li a:hover {
-            color: #ccc;
-        }
-
-        /* Responsividade simples */
-        @media(max-width: 768px){
-            header #branding,
-            header nav,
-            header nav li {
-                float: none;
-                text-align: center;
-                width: 100%;
-            }
-
-            header nav li {
-                padding: 10px 0;
-            }
-
-            #showcase h1 {
-                font-size: 40px;
-            }
-
-            #showcase p {
-                font-size: 18px;
-            }
-
-            .container {
-                width: 95%;
-            }
-
-            .prev, .next {
-                font-size: 16px;
-                padding: 12px;
-            }
-        }
-
+       
     </style>
+    <script>
+        
+    </script>
 </head>
 <body>
     <?php
@@ -302,22 +44,7 @@
         }
         // Não feche $mysqli aqui se for usado mais abaixo na página. Se for o último uso, pode fechar.
 ?>
-    <header>
-        <div class="container">
-            <div id="branding">
-                <h1><span class="highlight">Barbearia</span> JB</h1>
-            </div>
-            <nav>
-                <ul>
-                    <li class="current"><a href="index.php">Início</a></li>
-                    <li><a href="servicos.php">Serviços</a></li>
-                    <li><a href="produtos.php">Bebidas</a></li>
-                    <li><a href="recomendacoes.php">Recomendações</a></li>
-                    <li><a href="login.php">Login</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <?php include('routes/header.php')?>
 
     <section id="showcase">
         <div class="container">
@@ -405,15 +132,62 @@ if ($result_carousel = $mysqli->query($sql_carousel_recs)) {
             <h2>Visite-nos</h2>
             <p>Estamos ansiosos para recebê-lo!</p>
             <p><strong>Endereço:</strong> Av. J.J. Araújo Regadas, Lj 20, Teresópolis - RJ</p>
-            <p><strong>Horário de Funcionamento:</strong> [Segunda a Sábado: 9h - 20h] </p>
+            <p><strong>Horário de Funcionamento:</strong> Segunda a Sábado: 8h - 20h </p>
             <p><em>Não trabalhamos com agendamento. Atendimento por ordem de chegada.</em></p>
         </section>
     </div>
 
     <footer>
-        <p>Barbearia JB &copy; <?php echo date("Y"); ?> - Todos os direitos reservados.</p>
-        <p>"Sempre o melhor para você."</p>
-    </footer>
+    <div class="footer-container">
+        <div class="footer-section about-barbershop">
+            <h4>Barbearia JB</h4>
+            <p>"Sempre o melhor para você."</p>
+            <div class="social-links">
+                <!-- Certifique-se de que o Font Awesome está carregado no <head> para os ícones aparecerem corretamente -->
+                <a href="https://www.facebook.com/barbeariajbregadas" target="_blank" title="Facebook Barbearia JB">
+                    <i class="fab fa-facebook-f"><img src="imagens/logoface.png" alt="" width="50" height="50"></i>
+                </a>
+                <a href="SEU_LINK_INSTAGRAM_BARBEARIA_AQUI" target="_blank" title="Instagram Barbearia JB">
+                    <i class="fab fa-instagram"><img src="imagens/logoinsta.png" alt="" width="50" height="50"></i>
+                </a>
+                <a href="https://wa.me/+5521995390705" target="_blank" title="WhatsApp Barbearia JB">
+                    <i class="fab fa-whatsapp"><img src="imagens/logowhatsap.png" alt="" width="50" height="50"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="footer-section dev-info">
+            <h4>Desenvolvimento</h4>
+            <p>Criado e desenvolvido pela <a href="SEU_LINK_SITE_NETONERD_AQUI" target="_blank" style="color: #f39c12; text-decoration:none;">NetoNerd</a></p>
+            <div class="social-links">
+                <!-- Certifique-se de que o Font Awesome está carregado no <head> para os ícones aparecerem corretamente -->
+                <a href="https://www.facebook.com/profile.php?id=61557364371339" target="_blank" title="Facebook NetoNerd">
+                    <i class="fab fa-facebook-f"><img src="imagens/logoface.png" alt="" width="50" height="50"></i>
+                </a>
+                <a href="https://www.instagram.com/netonerdoficial/" target="_blank" title="Instagram  NetoNerd">
+                    <i class="fab fa-instagram"><img src="imagens/logoinsta.png" alt="" width="50" height="50"></i>
+                </a>
+                <a href="https://wa.me/+5521977395867" target="_blank" title="WhatsApp  NetoNerd">
+                    <i class="fab fa-whatsapp"><img src="imagens/logowhatsap.png" alt="" width="50" height="50"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="footer-section quick-links">
+            <h4>Links Úteis</h4>
+            <ul>
+                <li><a href="index.php">Início</a></li>
+                <li><a href="servicos.php">Serviços</a></li>
+                <li><a href="produtos.php">Bebidas</a></li>
+                <li><a href="recomendacoes.php">Recomendações</a></li>
+                <li><a href="login.php">Login / Cadastro</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; <?php echo date("Y"); ?> Barbearia JB &amp; NetoNerd. Todos os direitos reservados.</p>
+    </div>
+</footer>
 
     <script>
         let slideIndex = 1;
