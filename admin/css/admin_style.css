@@ -1,0 +1,426 @@
+/* admin/css/admin_style.css */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #2c3e50; /* Azul escuro/cinza para o admin */
+    color: #ecf0f1; /* Cinza claro para texto */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.admin-header {
+    background-color: #34495e; /* Azul um pouco mais claro */
+    color: #ecf0f1;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #f39c12; /* Laranja para destaque */
+}
+
+.admin-header h1 {
+    margin: 0;
+    font-size: 1.8em;
+}
+
+.admin-header a {
+    color: #ecf0f1;
+    text-decoration: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.admin-header a:hover {
+    background-color: #f39c12;
+    color: #2c3e50;
+}
+
+.admin-container {
+    display: flex;
+    flex-grow: 1;
+}
+
+.admin-sidebar {
+    width: 250px;
+    background-color: #34495e;
+    padding: 20px;
+    border-right: 1px solid #4a627a;
+}
+
+.admin-sidebar h2 {
+    color: #f39c12;
+    font-size: 1.4em;
+    margin-top: 0;
+    border-bottom: 1px solid #4a627a;
+    padding-bottom: 10px;
+}
+
+.admin-sidebar ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.admin-sidebar ul li a {
+    display: block;
+    color: #ecf0f1;
+    padding: 12px 15px;
+    text-decoration: none;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.admin-sidebar ul li a:hover,
+.admin-sidebar ul li a.active {
+    background-color: #f39c12;
+    color: #2c3e50;
+}
+
+.admin-main-content {
+    flex-grow: 1;
+    padding: 30px;
+    background-color: #212f3c; /* Fundo um pouco mais escuro para o conteúdo */
+}
+
+.admin-main-content h2 {
+    color: #ecf0f1;
+    border-bottom: 2px solid #f39c12;
+    padding-bottom: 10px;
+    margin-top: 0;
+}
+
+/* Estilos para tabelas */
+table.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #34495e;
+}
+
+table.admin-table th, table.admin-table td {
+    border: 1px solid #4a627a;
+    padding: 12px;
+    text-align: left;
+    color: #ecf0f1;
+}
+
+table.admin-table th {
+    background-color: #2c3e50;
+    color: #f39c12;
+    font-weight: bold;
+}
+
+table.admin-table tr:nth-child(even) {
+    background-color: #2f4052;
+}
+
+table.admin-table a.action-link {
+    color: #f39c12;
+    text-decoration: none;
+    margin-right: 10px;
+}
+table.admin-table a.action-link:hover {
+    text-decoration: underline;
+}
+
+/* Estilos para formulários */
+.form-section {
+    background-color: #34495e;
+    padding: 25px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.form-section h3 {
+    color: #f39c12;
+    margin-top: 0;
+    border-bottom: 1px solid #4a627a;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    color: #ecf0f1;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="number"],
+.form-group select {
+    width: calc(100% - 24px);
+    padding: 12px;
+    border-radius: 4px;
+    border: 1px solid #4a627a;
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    font-size: 1em;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="email"]:focus,
+.form-group input[type="password"]:focus,
+.form-group input[type="number"]:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #f39c12;
+    box-shadow: 0 0 5px rgba(243, 156, 18, 0.5);
+}
+
+.form-group button[type="submit"] {
+    background-color: #f39c12;
+    color: #2c3e50;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+
+.form-group button[type="submit"]:hover {
+    background-color: #e67e22; /* Laranja mais escuro no hover */
+    opacity: 0.9;
+}
+
+.message {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    font-size: 0.95em;
+}
+.message.success {
+    background-color: #27ae60; /* Verde para sucesso */
+    color: #fff;
+    border: 1px solid #2ecc71;
+}
+.message.error {
+    background-color: #c0392b; /* Vermelho para erro */
+    color: #fff;
+    border: 1px solid #e74c3c;
+}
+/* Responsividade para telas menores */
+@media (max-width: 900px) {
+    .admin-container {
+        flex-direction: column;
+    }
+    .admin-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #4a627a;
+        padding: 15px;
+    }
+    .admin-main-content {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px 15px;
+    }
+    .admin-header h1 {
+        font-size: 1.2em;
+        margin-bottom: 10px;
+    }
+    .admin-sidebar {
+        padding: 10px;
+    }
+    .admin-sidebar h2 {
+        font-size: 1.1em;
+        padding-bottom: 6px;
+    }
+    .admin-main-content {
+        padding: 10px;
+    }
+    .form-section {
+        padding: 12px;
+    }
+    table.admin-table th, table.admin-table td {
+        padding: 8px;
+        font-size: 0.95em;
+    }
+}
+
+/* Tabela responsiva em telas pequenas */
+@media (max-width: 600px) {
+    table.admin-table, 
+    table.admin-table thead, 
+    table.admin-table tbody, 
+    table.admin-table th, 
+    table.admin-table td, 
+    table.admin-table tr {
+        display: block;
+        width: 100%;
+    }
+    table.admin-table thead {
+        display: none;
+    }
+    table.admin-table tr {
+        margin-bottom: 15px;
+        background: none;
+        border: none;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    table.admin-table td {
+        border: none;
+        position: relative;
+        padding-left: 50%;
+        min-height: 40px;
+        box-sizing: border-box;
+    }
+    table.admin-table td:before {
+        position: absolute;
+        top: 12px;
+        left: 15px;
+        width: 45%;
+        white-space: nowrap;
+        font-weight: bold;
+        color: #f39c12;
+        content: attr(data-label);
+    }
+}
+
+/* Responsividade para tabela */
+.responsive-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+.admin-table th, .admin-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+@media (max-width: 700px) {
+    .admin-table, .admin-table thead, .admin-table tbody, .admin-table th, .admin-table td, .admin-table tr {
+        display: block;
+        width: 100%;
+    }
+    .admin-table thead {
+        display: none;
+    }
+    .admin-table tr {
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        padding: 8px 0;
+    }
+    .admin-table td {
+        position: relative;
+        padding-left: 50%;
+        border: none;
+        border-bottom: 1px solid #eee;
+        min-height: 40px;
+    }
+    .admin-table td:before {
+        position: absolute;
+        left: 12px;
+        top: 8px;
+        width: 45%;
+        white-space: nowrap;
+        font-weight: bold;
+        color: #555;
+        content: attr(data-label);
+    }
+    .admin-table td:last-child {
+        border-bottom: none;
+    }
+}
+/* --- Início dos Estilos Responsivos para a Tabela --- */
+@media screen and (max-width: 768px) { /* Ajuste o breakpoint conforme necessário */
+    table.admin-table {
+        border: none; /* Remove a borda da tabela principal */
+        box-shadow: none; /* Remove sombra se houver */
+    }
+
+    table.admin-table thead {
+        display: none; /* Esconde o cabeçalho tradicional da tabela */
+    }
+
+    table.admin-table tr {
+        display: block; /* Faz cada linha se comportar como um bloco (card) */
+        margin-bottom: 20px;
+        border: 1px solid #4a627a; /* Borda para cada card */
+        border-radius: 5px;
+        padding: 10px; /* Espaçamento interno para o card */
+        background-color: #2f4052; /* Cor de fundo para o card, pode ser a mesma de tr:nth-child(even) */
+    }
+
+    table.admin-table td {
+        display: block; /* Faz cada célula ocupar a largura total */
+        text-align: right; /* Alinha o VALOR da célula à direita */
+        padding-left: 50%; /* Cria espaço à esquerda para o rótulo (data-label) */
+        position: relative; /* Necessário para o posicionamento absoluto do ::before */
+        border-bottom: 1px dotted #4a627a; /* Linha separadora entre "campos" do card */
+        padding-top: 8px;
+        padding-bottom: 8px;
+        min-height: 24px; /* Para garantir altura mesmo com pouco conteúdo */
+    }
+
+    table.admin-table td:last-child {
+        border-bottom: none; /* Remove a borda inferior da última célula do card */
+    }
+
+    table.admin-table td::before {
+        content: attr(data-label); /* Pega o texto do atributo data-label */
+        position: absolute;
+        left: 10px; /* Espaçamento do rótulo à esquerda */
+        top: 50%;
+        transform: translateY(-50%); /* Centraliza verticalmente o rótulo */
+        width: calc(50% - 20px); /* Largura do rótulo (50% menos os paddings) */
+        padding-right: 10px; /* Espaço entre o rótulo e o valor */
+        white-space: normal; /* Permite que o rótulo quebre linha */
+        text-align: left; /* Alinha o RÓTULO à esquerda */
+        font-weight: bold;
+        color: #f39c12; /* Cor de destaque para o rótulo */
+    }
+
+    /* Ajustes específicos para células que podem ter mais conteúdo ou precisam de alinhamento diferente */
+    table.admin-table td[data-label="Descrição"],
+    table.admin-table td[data-label="Ações"] {
+        text-align: left; /* Alinha o conteúdo dessas células à esquerda */
+        padding-left: 10px; /* Remove o padding-left de 50% para dar mais espaço ao conteúdo */
+    }
+
+    table.admin-table td[data-label="Descrição"]::before,
+    table.admin-table td[data-label="Ações"]::before {
+        /* Faz o rótulo ocupar menos espaço ou ser posicionado de forma diferente se necessário */
+        width: auto; /* Ou um valor fixo pequeno */
+        position: relative; /* Tira do absolute para que fique acima do conteúdo */
+        display: block; /* Faz o rótulo ocupar uma linha */
+        top: auto;
+        transform: none;
+        margin-bottom: 5px; /* Espaço entre o rótulo e o conteúdo */
+        text-align: left;
+    }
+
+    table.admin-table td[data-label="Ações"] a.action-link {
+        display: inline-block; /* Para melhor espaçamento se houver múltiplos links */
+        margin-right: 10px;
+        margin-bottom: 5px;
+    }
+}
+/* --- Fim dos Estilos Responsivos para a Tabela --- */
