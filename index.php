@@ -1,3 +1,5 @@
+<?require_once 'config/database.php';?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -16,8 +18,7 @@
 </head>
 <body>
     <?php
-        // index.php (no topo ou antes da seção do carrossel)
-        // session_start(); // Se você precisar de sessão por outros motivos na index.php
+        
         require_once 'config/database.php'; // Garanta que o caminho está correto
 
         $carousel_recomendacoes = [];

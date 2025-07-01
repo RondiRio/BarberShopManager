@@ -1,19 +1,30 @@
 <?php
 session_start();
-require_once '../config/database.php'; // Ajuste o caminho
+require_once '../config/database.php';
 
-// Verifica se o cliente está logado
+// 1. SEGURANÇA E DADOS DO USUÁRIO
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION["role"] !== 'customer') {
     header("location: ../login.php");
     exit;
 }
-
 $cliente_id = $_SESSION["user_id"];
 $cliente_nome = $_SESSION["name"];
 
-// Buscar lista de barbeiros para os dropdowns
+// 2. VERIFICAR CONFIGURAÇÕES DA BARBEARIA
+$agendamento_habilitado = false;
+$agendamento_online_permitido = false;
+$sql_configs = "SELECT agendamento_ativo, permitir_agendamento_cliente FROM configuracoes WHERE config_id = 1";
+if ($result_configs = $mysqli->query($sql_configs)) {
+    if ($configs_db = $result_configs->fetch_assoc()) {
+        $agendamento_habilitado = (bool)$configs_db['agendamento_ativo'];
+        $agendamento_online_permitido = (bool)$configs_db['permitir_agendamento_cliente'];
+    }
+    $result_configs->free();
+}
+
+// 3. BUSCAR LISTA DE BARBEIROS
 $barbeiros_lista = [];
-$sql_barbeiros = "SELECT user_id, name FROM Users WHERE role = 'barber' AND is_active = 1 ORDER BY name ASC";
+$sql_barbeiros = "SELECT user_id, name, foto_perfil FROM users WHERE role = 'barber' AND is_active = 1 ORDER BY name ASC";
 if ($result_barbs = $mysqli->query($sql_barbeiros)) {
     while ($barb = $result_barbs->fetch_assoc()) {
         $barbeiros_lista[] = $barb;
@@ -21,34 +32,18 @@ if ($result_barbs = $mysqli->query($sql_barbeiros)) {
     $result_barbs->free();
 }
 
-// Lógica para buscar fotos do mural do barbeiro selecionado
-$fotos_do_barbeiro_selecionado = [];
-$barbeiro_mural_selecionado_id = null;
-$barbeiro_mural_selecionado_nome = "";
-
-if (isset($_GET['view_mural_barber_id']) && is_numeric($_GET['view_mural_barber_id'])) {
-    $barbeiro_mural_selecionado_id = (int)$_GET['view_mural_barber_id'];
-
-    // Pegar nome do barbeiro selecionado
-    foreach($barbeiros_lista as $b_info){
-        if($b_info['user_id'] == $barbeiro_mural_selecionado_id){
-            $barbeiro_mural_selecionado_nome = $b_info['name'];
-            break;
+// 4. BUSCAR AGENDAMENTOS FUTUROS DO CLIENTE
+$meus_agendamentos = [];
+if ($agendamento_habilitado) {
+    $sql_meus_agendamentos = "SELECT a.agendamento_id, a.data_hora_agendamento, a.barbeiro_id, u.name AS barbeiro_nome, s.nome AS servico_nome FROM agendamentos a JOIN Users u ON a.barbeiro_id = u.user_id JOIN servicos s ON a.servico_id = s.service_id WHERE a.cliente_id = ? AND a.data_hora_agendamento >= NOW() AND a.status = 'Confirmado' ORDER BY a.data_hora_agendamento ASC";
+    if ($stmt_meus_agend = $mysqli->prepare($sql_meus_agendamentos)) {
+        $stmt_meus_agend->bind_param("i", $cliente_id);
+        $stmt_meus_agend->execute();
+        $result_meus_agend = $stmt_meus_agend->get_result();
+        while ($agend = $result_meus_agend->fetch_assoc()) {
+            $meus_agendamentos[] = $agend;
         }
-    }
-
-    $sql_fotos = "SELECT caminho_imagem, legenda, DATE_FORMAT(data_upload, '%d/%m/%Y') as data_f
-                  FROM Fotos_Barbeiro
-                  WHERE barbeiro_id = ?
-                  ORDER BY data_upload DESC";
-    if ($stmt_fotos = $mysqli->prepare($sql_fotos)) {
-        $stmt_fotos->bind_param("i", $barbeiro_mural_selecionado_id);
-        $stmt_fotos->execute();
-        $result_fotos_mural = $stmt_fotos->get_result();
-        while ($foto_mural = $result_fotos_mural->fetch_assoc()) {
-            $fotos_do_barbeiro_selecionado[] = $foto_mural;
-        }
-        $stmt_fotos->close();
+        $stmt_meus_agend->close();
     }
 }
 ?>
@@ -58,38 +53,11 @@ if (isset($_GET['view_mural_barber_id']) && is_numeric($_GET['view_mural_barber_
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minha Conta - Barbearia JB</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #121212; color: #FFF; padding: 0; margin:0; line-height: 1.6; }
-        .customer-header { background-color: #000; color: #FFF; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom:3px solid #f39c12;}
-        .customer-header h1 { margin: 0; font-size: 1.5em; }
-        .customer-header a { color: #FFF; text-decoration: none; }
-        .customer-container { max-width: 900px; margin: 30px auto; padding: 20px; background-color: #1E1E1E; border-radius: 8px; }
-        h2 { color: #f39c12; border-bottom: 1px solid #444; padding-bottom: 10px; margin-top: 0;}
-        .section { margin-bottom: 30px; background-color: #282828; padding: 20px; border-radius: 5px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size:0.9em; color:#DDD; }
-        .form-group select, .form-group textarea, .form-group button {
-            width: calc(100% - 22px); padding: 10px; background-color: #333; border: 1px solid #555;
-            color: #FFF; border-radius: 4px; font-size: 1em;
-        }
-        .form-group textarea { width: calc(100% - 22px); min-height: 80px; } /* Ajuste de largura para textarea */
-        .form-group button { background-color: #f39c12; color: #000; border: none; cursor: pointer; font-weight: bold; width: auto; }
-        .message { padding: 10px; margin-bottom: 15px; border-radius:4px; text-align:center;}
-        .message.success { background-color: #27ae60; color:white; }
-        .message.error { background-color: #c0392b; color:white; }
-
-        .mural-gallery { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; justify-content: flex-start;}
-        .foto-item { background-color:#333; padding:10px; border-radius:5px; text-align:center; width: calc(33.333% - 10px); box-sizing: border-box; }
-        .foto-item img { width: 100%; height: 180px; object-fit: cover; border-radius: 3px; margin-bottom: 8px; }
-        .foto-item p { font-size: 0.85em; color: #ccc; margin-bottom: 5px; word-wrap: break-word; }
-        .foto-item .data { font-size: 0.75em; color: #888; }
-        @media (max-width: 768px) { .foto-item { width: calc(50% - 8px); } }
-        @media (max-width: 480px) { .foto-item { width: 100%; } }
-    </style>
+    <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
     <header class="customer-header">
-        <h1>Barbearia JB - Minha Conta</h1>
+        <h1>Barbearia JB - <?php print_r($_SESSION['name'])?></h1>
         <div>
             <span>Olá, <?php echo htmlspecialchars($cliente_nome); ?>!</span>
             <a href="../logout.php" style="margin-left: 20px;">Sair</a>
@@ -97,82 +65,210 @@ if (isset($_GET['view_mural_barber_id']) && is_numeric($_GET['view_mural_barber_
     </header>
 
     <div class="customer-container">
-        <?php
-            if (isset($_SESSION['customer_message'])) {
-                echo '<div class="message ' . htmlspecialchars($_SESSION['customer_message_type']) . '">' . htmlspecialchars($_SESSION['customer_message']) . '</div>';
-                unset($_SESSION['customer_message']);
-                unset($_SESSION['customer_message_type']);
-            }
-        ?>
-
-        <section class="section">
-            <h2>Deixar uma Recomendação</h2>
-            <form action="handle_add_recomendacao.php" method="POST">
-                <div class="form-group">
-                    <label for="barbeiro_id_rec">Barbeiro que te atendeu:</label>
-                    <select name="barbeiro_id" id="barbeiro_id_rec" required>
-                        <option value="">Selecione um barbeiro</option>
-                        <?php foreach($barbeiros_lista as $barbeiro): ?>
-                            <option value="<?php echo $barbeiro['user_id']; ?>"><?php echo htmlspecialchars($barbeiro['name']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
+        <div id="notification-area" style="display: none;"></div>
+        
+        <?php if ($agendamento_habilitado && $agendamento_online_permitido): ?>
+            <section class="section">
+                <h2>Agendar um Horário</h2>
+                <div class="barber-selection-container">
+                    <?php foreach($barbeiros_lista as $barbeiro): ?>
+                        <div class="barber-card">
+                            <img src="../<?php echo htmlspecialchars($barbeiro['foto_perfil'] ?? 'imagens/perfis/default.png'); ?>" alt="Foto de <?php echo htmlspecialchars($barbeiro['name']); ?>">
+                            <h3><?php echo htmlspecialchars($barbeiro['name']); ?></h3>
+                            <a href="agendar_horario.php?barbeiro_id=<?php echo $barbeiro['user_id']; ?>" class="button">Agendar</a>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-                <div class="form-group">
-                    <label for="texto_recomendacao">Sua Recomendação:</label>
-                    <textarea name="texto_recomendacao" id="texto_recomendacao" rows="5" required></textarea>
-                </div>
-                <div class="form-group">
-                    <button type="submit">Enviar Recomendação</button>
-                </div>
-            </form>
-        </section>
-
-        <section class="section">
-            <h2>Ver Mural de Fotos dos Barbeiros</h2>
-            <form action="dashboard.php" method="GET">
-                 <div class="form-group">
-                    <label for="view_mural_barber_id">Selecione o Barbeiro:</label>
-                    <select name="view_mural_barber_id" id="view_mural_barber_id" onchange="this.form.submit()">
-                        <option value="">Escolha um barbeiro para ver o mural</option>
-                        <?php foreach($barbeiros_lista as $barbeiro): ?>
-                            <option value="<?php echo $barbeiro['user_id']; ?>" <?php echo ($barbeiro_mural_selecionado_id == $barbeiro['user_id']) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($barbeiro['name']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                </form>
-
-            <?php if ($barbeiro_mural_selecionado_id && !empty($barbeiro_mural_selecionado_nome)): ?>
-                <h3>Mural de <?php echo htmlspecialchars($barbeiro_mural_selecionado_nome); ?></h3>
-                <?php if (!empty($fotos_do_barbeiro_selecionado)): ?>
-                    <div class="mural-gallery">
-                        <?php foreach($fotos_do_barbeiro_selecionado as $foto): ?>
-                            <div class="foto-item">
-                                <img src="../<?php echo htmlspecialchars($foto['caminho_imagem']); ?>" alt="<?php echo htmlspecialchars($foto['legenda'] ?? 'Foto do Mural'); ?>">
-                                <?php if(!empty($foto['legenda'])): ?>
-                                    <p><?php echo htmlspecialchars($foto['legenda']); ?></p>
-                                <?php endif; ?>
-                                <p class="data">Postada em: <?php echo $foto['data_f']; ?></p>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php else: ?>
-                    <p><?php echo htmlspecialchars($barbeiro_mural_selecionado_nome); ?> ainda não postou fotos no mural.</p>
-                <?php endif; ?>
-            <?php endif; ?>
-        </section>
-
-        <!-- <section class="section">
-            <h2>Meu Histórico de Atendimentos (Sugestão)</h2>
-            <p>Aqui você poderá ver os serviços que realizou, com qual barbeiro e quando. (Requer alteração na forma como o barbeiro registra atendimentos para vincular ao seu ID de cliente).</p>
             </section>
+        <?php endif; ?>
 
-        <section class="section">
-            <h2>Programa de Fidelidade (Sugestão)</h2>
-            <p>Acompanhe seus pontos! A cada 10 cortes de cabelo, ganhe 1 grátis. (Requer uma coluna 'pontos_fidelidade' na tabela de usuários/clientes e lógica de incremento).</p>
-            </section> -->
-
+        <?php if ($agendamento_habilitado): ?>
+            <section class="section">
+                <h2>Meus Próximos Agendamentos</h2>
+                <div id="minha-lista-de-agendamentos">
+                    <?php if (!empty($meus_agendamentos)): ?>
+                        <table class="appointments-table">
+                            <thead>
+                                <tr><th>Data</th><th>Horário</th><th>Barbeiro</th><th>Serviço</th><th>Ações</th></tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach($meus_agendamentos as $agendamento): ?>
+                                    <tr id="agendamento-row-<?php echo $agendamento['agendamento_id']; ?>" data-date="<?php echo date('Y-m-d', strtotime($agendamento['data_hora_agendamento'])); ?>">
+                                        <td class="ag-data"><?php echo date('d/m/Y', strtotime($agendamento['data_hora_agendamento'])); ?></td>
+                                        <td class="ag-hora"><?php echo date('H:i', strtotime($agendamento['data_hora_agendamento'])); ?></td>
+                                        <td><?php echo htmlspecialchars($agendamento['barbeiro_nome']); ?></td>
+                                        <td><?php echo htmlspecialchars($agendamento['servico_nome']); ?></td>
+                                        <td>
+                                            <button class="action-link edit-button" data-id="<?php echo $agendamento['agendamento_id']; ?>" data-barbeiro-id="<?php echo $agendamento['barbeiro_id']; ?>">Editar</button>
+                                            <button class="action-link cancel-button" data-id="<?php echo $agendamento['agendamento_id']; ?>">Cancelar</button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php else: ?>
+                        <p>Você não possui agendamentos futuros.</p>
+                    <?php endif; ?>
+                </div>
+            </section>
+        <?php endif; ?>
     </div>
+
+    <div id="modal-cancelar" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" data-modal="modal-cancelar">&times;</span>
+            <h3>Confirmar Cancelamento</h3>
+            <p>Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.</p>
+            <form id="form-cancelar">
+                <input type="hidden" id="cancelar-agendamento-id" name="agendamento_id">
+                <button type="submit">Sim, Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-editar" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" data-modal="modal-editar">&times;</span>
+            <h3>Editar Agendamento</h3>
+            <form id="form-editar">
+                <input type="hidden" id="editar-agendamento-id" name="agendamento_id">
+                <input type="hidden" id="editar-barbeiro-id" name="barbeiro_id">
+                <div class="form-group">
+                    <label for="editar-data">Escolha a nova data:</label>
+                    <input type="date" id="editar-data" name="data" required min="<?php echo date('Y-m-d'); ?>">
+                </div>
+                <div class="form-group">
+                    <label>Escolha o novo horário:</label>
+                    <div id="horarios-disponiveis-modal"><p>Selecione uma data.</p></div>
+                </div>
+                <button type="submit" id="btn-confirmar-edicao" disabled>Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const mainContainer = document.querySelector('.customer-container');
+    const modalEditar = document.getElementById('modal-editar');
+    const modalCancelar = document.getElementById('modal-cancelar');
+
+    // Função genérica para notificação
+    function showNotification(message, type = 'success') {
+        alert(message); // Simples, substitua por um toast mais elegante se desejar
+    }
+
+    // --- CONTROLE DOS MODAIS ---
+    function abrirModal(modal) { modal.classList.add('active'); }
+    function fecharModais() {
+        modalEditar.classList.remove('active');
+        modalCancelar.classList.remove('active');
+    }
+
+    mainContainer.addEventListener('click', function(e) {
+        if (e.target.matches('.edit-button')) {
+            const row = e.target.closest('tr');
+            document.getElementById('editar-agendamento-id').value = e.target.dataset.id;
+            document.getElementById('editar-barbeiro-id').value = e.target.dataset.barbeiroId;
+            document.getElementById('editar-data').value = row.dataset.date;
+            fetchHorarios();
+            abrirModal(modalEditar);
+        }
+        if (e.target.matches('.cancel-button')) {
+            document.getElementById('cancelar-agendamento-id').value = e.target.dataset.id;
+            abrirModal(modalCancelar);
+        }
+    });
+
+    document.querySelectorAll('.modal-close').forEach(el => el.addEventListener('click', fecharModais));
+    document.querySelectorAll('.modal').forEach(el => el.addEventListener('click', (e) => {
+        if (e.target === el) fecharModais();
+    }));
+
+    // --- LÓGICA DE EDIÇÃO E AJAX ---
+    const dataInputEditar = document.getElementById('editar-data');
+    const horariosContainerModal = document.getElementById('horarios-disponiveis-modal');
+    const btnConfirmarEdicao = document.getElementById('btn-confirmar-edicao');
+
+    async function fetchHorarios() {
+        const barbeiroId = document.getElementById('editar-barbeiro-id').value;
+        const data = dataInputEditar.value;
+        const agendamentoId = document.getElementById('editar-agendamento-id').value;
+        btnConfirmarEdicao.disabled = true;
+
+        if (!data) return;
+        horariosContainerModal.innerHTML = `<p>Buscando horários...</p>`;
+
+        try {
+            const response = await fetch(`get_horarios_disponiveis.php?barbeiro_id=${barbeiroId}&data=${data}&exclude_id=${agendamentoId}`);
+            const horarios = await response.json();
+            horariosContainerModal.innerHTML = '';
+
+            if (horarios.error || horarios.length === 0) {
+                horariosContainerModal.innerHTML = `<p>Nenhum horário disponível nesta data.</p>`;
+            } else {
+                horarios.forEach(horario => {
+                    const radioId = `horario-modal-${horario.replace(':', '')}`;
+                    horariosContainerModal.innerHTML += `
+                        <label><input type="radio" name="horario" id="${radioId}" value="${horario}" required> <span>${horario}</span></label>
+                    `;
+                });
+            }
+        } catch (e) {
+            horariosContainerModal.innerHTML = `<p>Erro ao carregar horários.</p>`;
+        }
+    }
+
+    dataInputEditar.addEventListener('change', fetchHorarios);
+    horariosContainerModal.addEventListener('change', (e) => {
+        if (e.target.name === 'horario') btnConfirmarEdicao.disabled = false;
+    });
+
+    // Submeter Formulário de Edição
+    document.getElementById('form-editar').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        formData.append('action', 'editar');
+
+        const response = await fetch('handle_appointment_actions.php', { method: 'POST', body: formData });
+        const result = await response.json();
+
+        if (result.success) {
+            const id = formData.get('agendamento_id');
+            const row = document.getElementById(`agendamento-row-${id}`);
+            const novaData = new Date(formData.get('data') + 'T' + document.querySelector('[name="horario"]:checked').value);
+            row.querySelector('.ag-data').textContent = novaData.toLocaleDateString('pt-BR');
+            row.querySelector('.ag-hora').textContent = novaData.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            row.dataset.date = formData.get('data');
+            showNotification(result.message, 'success');
+        } else {
+            showNotification(result.message, 'error');
+        }
+        fecharModais();
+    });
+
+    // Submeter Formulário de Cancelamento
+    document.getElementById('form-cancelar').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        formData.append('action', 'cancelar');
+
+        const response = await fetch('handle_appointment_actions.php', { method: 'POST', body: formData });
+        const result = await response.json();
+        
+        if (result.success) {
+            const id = formData.get('agendamento_id');
+            const row = document.getElementById(`agendamento-row-${id}`);
+            row.style.transition = 'opacity 0.5s';
+            row.style.opacity = '0';
+            setTimeout(() => row.remove(), 500);
+            showNotification(result.message, 'success');
+        } else {
+            showNotification(result.message, 'error');
+        }
+        fecharModais();
+    });
+});
+</script>
+
 </body>
 </html>

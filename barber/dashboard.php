@@ -8,25 +8,59 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION
     exit;
 }
 
+// Assume-se que o barbearia_id está na sessão após o login
 $barbeiro_id = $_SESSION["user_id"];
-// A taxa de comissão deve vir da sessão, como configurado no handle_login.php
+$barbearia_id = $_SESSION["barbearia_id"] ?? 0; // Garante que a variável exista
 $taxa_comissao = isset($_SESSION["commission_rate"]) ? floatval($_SESSION["commission_rate"]) : 0.0;
 
-// Definir a semana atual (Segunda-feira a Sábado 23:59:59 ou até o dia/hora atual)
-// Para simplificar, vamos considerar a semana começando na última segunda-feira até o momento atual.
-// Para o relatório final de sábado, a query do relatório pegará até Sábado 23:59:59.
+// LÓGICA DE CONFIGURAÇÕES ATUALIZADA (Single-Tenant)
+$agendamento_habilitado = false;
+$sql_check_config = "SELECT agendamento_ativo FROM configuracoes WHERE config_id = 1";
+if ($result_config = $mysqli->query($sql_check_config)) {
+    if ($config = $result_config->fetch_assoc()) {
+        $agendamento_habilitado = (bool)$config['agendamento_ativo'];
+    }
+    $result_config->free();
+}
+
+// --- SE AGENDAMENTO ESTIVER ATIVO, BUSCAR A AGENDA DO DIA ---
+$agendamentos_de_hoje = [];
+if ($agendamento_habilitado) {
+    $sql_agenda = "SELECT 
+                        a.data_hora_agendamento,
+                        u.name AS cliente_nome,
+                        s.nome AS servico_nome
+                   FROM agendamentos a
+                   JOIN Users u ON a.cliente_id = u.user_id
+                   JOIN servicos s ON a.servico_id = s.service_id
+                   WHERE 
+                        a.barbeiro_id = ? AND
+                        DATE(a.data_hora_agendamento) = CURDATE() AND
+                        a.status = 'Confirmado'
+                   ORDER BY a.data_hora_agendamento ASC";
+    
+    if ($stmt_agenda = $mysqli->prepare($sql_agenda)) {
+        $stmt_agenda->bind_param("i", $barbeiro_id);
+        $stmt_agenda->execute();
+        $result_agenda = $stmt_agenda->get_result();
+        while ($row = $result_agenda->fetch_assoc()) {
+            $agendamentos_de_hoje[] = $row;
+        }
+        $stmt_agenda->close();
+    }
+}
+
+// --- LÓGICA EXISTENTE PARA MÉTRICAS DA SEMANA ---
 $hoje = new DateTime();
 $dia_semana = $hoje->format('N'); // 1 (Segunda) a 7 (Domingo)
 $inicio_semana_dt = clone $hoje;
-if ($dia_semana == 7) { // Se hoje é Domingo, consideramos a semana que já passou ou a que vai começar
-    $inicio_semana_dt->modify('last monday'); // Ou 'monday this week' se domingo deve ser da semana anterior
+if ($dia_semana == 7) { 
+    $inicio_semana_dt->modify('last monday');
 } else {
     $inicio_semana_dt->modify('-'.($dia_semana-1).' days');
 }
 $inicio_semana_dt->setTime(0,0,0);
-$fim_semana_dt = clone $hoje; // Até o momento atual para o dashboard
-// Para o relatório final de sábado: $fim_semana_dt->modify('saturday this week')->setTime(23,59,59);
-
+$fim_semana_dt = clone $hoje;
 
 $inicio_semana_sql = $inicio_semana_dt->format('Y-m-d H:i:s');
 $fim_semana_sql = $fim_semana_dt->format('Y-m-d H:i:s');
@@ -36,31 +70,9 @@ $total_servicos_comissionaveis_semana = 0.00;
 $total_gorjetas_semana = 0.00;
 $total_vendas_produtos_semana = 0.00;
 $total_vales_semana = 0.00;
-$clientes_unicos_nomes = [];
-
-
-// 1. Total de Serviços Comissionáveis e Gorjetas
-$sql_atendimentos = "SELECT SUM(preco_cobrado) as total_servicos, SUM(gorjeta) as total_gorjetas, cliente_nome
-                     FROM atendimentos
-                     WHERE barbeiro_id = ? AND registrado_em BETWEEN ? AND ?
-                     GROUP BY cliente_nome"; // Agrupar por cliente para contar únicos, mas somar tudo
-
-if ($stmt_atendimentos = $mysqli->prepare($sql_atendimentos)) {
-    $stmt_atendimentos->bind_param("iss", $barbeiro_id, $inicio_semana_sql, $fim_semana_sql);
-    $stmt_atendimentos->execute();
-    $result_atendimentos = $stmt_atendimentos->get_result();
-    while($atendimento = $result_atendimentos->fetch_assoc()){
-        // Mesmo que agrupado, o SUM já considera todos os registros no período
-        // Para o total_servicos_comissionaveis_semana e total_gorjetas_semana, precisamos do SUM geral,
-        // não por cliente_nome. Então, vamos fazer uma query separada para os totais e outra para clientes únicos.
-    }
-    $stmt_atendimentos->close();
-}
 
 // Query para totais de serviços e gorjetas
-$sql_totais_servicos = "SELECT SUM(preco_cobrado) as total_servicos, SUM(gorjeta) as total_gorjetas
-                        FROM atendimentos
-                        WHERE barbeiro_id = ? AND registrado_em BETWEEN ? AND ?";
+$sql_totais_servicos = "SELECT SUM(preco_cobrado) as total_servicos, SUM(gorjeta) as total_gorjetas FROM atendimentos WHERE barbeiro_id = ? AND registrado_em BETWEEN ? AND ?";
 if ($stmt_totais_serv = $mysqli->prepare($sql_totais_servicos)) {
     $stmt_totais_serv->bind_param("iss", $barbeiro_id, $inicio_semana_sql, $fim_semana_sql);
     $stmt_totais_serv->execute();
@@ -72,21 +84,20 @@ if ($stmt_totais_serv = $mysqli->prepare($sql_totais_servicos)) {
     $stmt_totais_serv->close();
 }
 
-
 // Query para clientes únicos (contando nomes distintos não nulos)
-$sql_clientes_unicos = "SELECT DISTINCT cliente_nome FROM atendimentos WHERE barbeiro_id = ? AND registrado_em BETWEEN ? AND ? AND cliente_nome IS NOT NULL AND cliente_nome != ''";
+$quantidade_clientes_semana = 0;
+$sql_clientes_unicos = "SELECT COUNT(DISTINCT cliente_nome) as contagem_unicos FROM atendimentos WHERE barbeiro_id = ? AND registrado_em BETWEEN ? AND ? AND cliente_nome IS NOT NULL AND cliente_nome != ''";
 if ($stmt_clientes = $mysqli->prepare($sql_clientes_unicos)) {
     $stmt_clientes->bind_param("iss", $barbeiro_id, $inicio_semana_sql, $fim_semana_sql);
     $stmt_clientes->execute();
     $result_clientes = $stmt_clientes->get_result();
-    $quantidade_clientes_semana = $result_clientes->num_rows;
+    if($data_clientes = $result_clientes->fetch_assoc()) {
+        $quantidade_clientes_semana = $data_clientes['contagem_unicos'];
+    }
     $stmt_clientes->close();
-} else {
-    $quantidade_clientes_semana = 0;
 }
 
-
-// 2. Total de Vendas de Produtos
+// Total de Vendas de Produtos
 $sql_vendas = "SELECT SUM(valor_total_venda) as total_produtos FROM Vendas_Produtos WHERE barbeiro_id = ? AND vendido_em BETWEEN ? AND ?";
 if ($stmt_vendas = $mysqli->prepare($sql_vendas)) {
     $stmt_vendas->bind_param("iss", $barbeiro_id, $inicio_semana_sql, $fim_semana_sql);
@@ -98,7 +109,7 @@ if ($stmt_vendas = $mysqli->prepare($sql_vendas)) {
     $stmt_vendas->close();
 }
 
-// 3. Total de Vales
+// Total de Vales
 $sql_vales = "SELECT SUM(valor) as total_vales FROM Vales_Barbeiro WHERE barbeiro_id = ? AND registrado_em BETWEEN ? AND ?";
 if ($stmt_vales = $mysqli->prepare($sql_vales)) {
     $stmt_vales->bind_param("iss", $barbeiro_id, $inicio_semana_sql, $fim_semana_sql);
@@ -110,16 +121,13 @@ if ($stmt_vales = $mysqli->prepare($sql_vales)) {
     $stmt_vales->close();
 }
 
-// 4. Cálculo da Comissão
+// Cálculos Financeiros
 $comissao_calculada_semana = $total_servicos_comissionaveis_semana * $taxa_comissao;
+$total_a_pagar_semana = ($comissao_calculada_semana + $total_gorjetas_semana) - $total_vales_semana;
 
 // --- Buscar Listas para Formulários ---
-// Serviços comissionáveis (Corte, Barba, Pé) - Adapte os IDs ou nomes conforme seu BD
-// Idealmente, a tabela 'servicos' teria uma coluna 'comissionavel' (BOOLEAN)
-// Por ora, vamos buscar por nome se eles forem fixos.
 $servicos_comissionaveis = [];
-// Use IDs se souber, ou nomes. Ex: WHERE nome IN ('Corte de Cabelo Masculino', 'Barba Tradicional (Navalha)', 'Pezinho (Acabamento)')
-$sql_lista_servicos = "SELECT service_id, nome, preco FROM servicos WHERE ativo = 1 "; // Adapte os nomes!
+$sql_lista_servicos = "SELECT service_id, nome, preco FROM servicos WHERE ativo = 1 ORDER BY nome ASC";
 if ($result_lista_servicos = $mysqli->query($sql_lista_servicos)) {
     while ($serv = $result_lista_servicos->fetch_assoc()) {
         $servicos_comissionaveis[] = $serv;
@@ -135,13 +143,13 @@ if ($result_lista_produtos = $mysqli->query($sql_lista_produtos)) {
     }
     $result_lista_produtos->free();
 }
+
+// Buscar fotos do mural
 $fotos_mural = [];
 $sql_fotos = "SELECT foto_id, caminho_imagem, legenda, DATE_FORMAT(data_upload, '%d/%m/%Y %H:%i') as data_formatada
               FROM fotos_barbeiro
               WHERE barbeiro_id = ?
-              ORDER BY data_upload DESC"; // Mais recentes primeiro
-
-
+              ORDER BY data_upload DESC";
 if ($stmt_fotos = $mysqli->prepare($sql_fotos)) {
     $stmt_fotos->bind_param("i", $barbeiro_id);
     $stmt_fotos->execute();
@@ -151,7 +159,6 @@ if ($stmt_fotos = $mysqli->prepare($sql_fotos)) {
     }
     $stmt_fotos->close();
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -172,7 +179,7 @@ if ($stmt_fotos = $mysqli->prepare($sql_fotos)) {
         .stat-card h3 { margin-top: 0; font-size: 1.1em; color: #BBB; text-transform: uppercase;}
         .stat-card p { font-size: 1.8em; font-weight: bold; color: #FFF; margin-bottom:0;}
         
-        .forms-section { display: flex; flex-wrap: wrap; gap: 30px; }
+        .forms-section { display: flex; flex-wrap: wrap; gap: 30px; margin-top: 30px;}
         .form-container { background-color: #282828; padding: 20px; border-radius: 8px; flex: 1; min-width: 300px; }
         .form-container h3 { margin-top: 0; color: #f39c12; border-bottom: 1px solid #444; padding-bottom: 10px;}
         .form-group { margin-bottom: 15px; }
@@ -201,6 +208,47 @@ if ($stmt_fotos = $mysqli->prepare($sql_fotos)) {
 
         .photo-mural { margin-top: 30px; border-top:1px solid #444; padding-top:20px;}
         .photo-mural img { width: 150px; height: 150px; object-fit: cover; margin: 5px; border: 2px solid #444; border-radius: 4px;}
+
+        /* ESTILOS PARA A AGENDA */
+        .agenda-container {
+            background-color: #282828;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .agenda-container h2 {
+            margin-top: 0;
+            color: #f39c12;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        .agenda-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .agenda-table th, .agenda-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+        .agenda-table th {
+            background-color: #333;
+            color: #f39c12;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+        .agenda-table td {
+            color: #ddd;
+        }
+        .agenda-table tr:last-child td {
+            border-bottom: none;
+        }
+        .no-appointments {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+        }
     </style>
 </head>
 <body>
@@ -247,16 +295,43 @@ if ($stmt_fotos = $mysqli->prepare($sql_fotos)) {
             </div>
         </div>
 
+        <?php if ($agendamento_habilitado): ?>
+            <div class="agenda-container">
+                <h2>📅 Sua Agenda para Hoje (<?php echo date('d/m/Y'); ?>)</h2>
+                
+                <?php if (!empty($agendamentos_de_hoje)): ?>
+                    <table class="agenda-table">
+                        <thead>
+                            <tr>
+                                <th>Horário</th>
+                                <th>Cliente</th>
+                                <th>Serviço</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($agendamentos_de_hoje as $agendamento): ?>
+                                <tr>
+                                    <td><?php echo date('H:i', strtotime($agendamento['data_hora_agendamento'])); ?></td>
+                                    <td><?php echo htmlspecialchars($agendamento['cliente_nome']); ?></td>
+                                    <td><?php echo htmlspecialchars($agendamento['servico_nome']); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <p class="no-appointments">Você não tem nenhum agendamento para hoje.</p>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
         <div class="forms-section">
             <div class="form-container">
-                <h3><emoji>✂️</emoji> Registrar Atendimento</h3>
+                <h3>✂️ Registrar Atendimento</h3>
                 <form action="handle_add_atendimento.php" method="post">
                     <div class="form-group">
                         <label for="servico_id">Serviço:</label>
                         <select name="servico_id" id="servico_id" required>
                             <option value="">Selecione o serviço</option>
                             <?php foreach ($servicos_comissionaveis as $serv): ?>
-                                <?echo $serv['service_id'];?>
                                 <option value="<?php echo $serv['service_id']; ?>" data-preco="<?php echo $serv['preco']; ?>">
                                     <?php echo htmlspecialchars($serv['nome']) . " (R$ " . number_format($serv['preco'], 2, ',', '.') . ")"; ?>
                                 </option>
@@ -278,7 +353,7 @@ if ($stmt_fotos = $mysqli->prepare($sql_fotos)) {
                             <option value="cartao_debito">Cartão de Débito</option>
                             <option value="cartao_credito">Cartão de Crédito</option>
                             <option value="pix">PIX</option>
-                            </select>
+                        </select>
                     </div>
                     <div class="form-group">
                         <button type="submit">Registrar Atendimento</button>
@@ -287,7 +362,7 @@ if ($stmt_fotos = $mysqli->prepare($sql_fotos)) {
             </div>
 
             <div class="form-container">
-                <h3><emoji>🍺</emoji> Registrar Venda de Produto</h3>
+                <h3>🍺 Registrar Venda de Produto</h3>
                 <form action="handle_add_venda_produto.php" method="post">
                     <div class="form-group">
                         <label for="produto_id">Produto:</label>
@@ -320,7 +395,7 @@ if ($stmt_fotos = $mysqli->prepare($sql_fotos)) {
             </div>
 
             <div class="form-container">
-                <h3><emoji>💰</emoji> Registrar Vale</h3>
+                <h3>💰 Registrar Vale</h3>
                 <form action="handle_add_vale.php" method="post">
                     <div class="form-group">
                         <label for="valor_vale">Valor do Vale (R$):</label>
@@ -335,37 +410,38 @@ if ($stmt_fotos = $mysqli->prepare($sql_fotos)) {
                     </div>
                 </form>
             </div>
+        </div>
         <div class="photo-mural">
-    <h3><emoji>📸</emoji> Seu Mural de Fotos</h3>
-    <form action="handle_upload_foto.php" method="post" enctype="multipart/form-data" style="margin-bottom:25px; background-color: #333; padding:15px; border-radius:5px;">
-        <div class="form-group">
-            <label for="fotoCliente">Adicionar foto ao mural (JPG, PNG, GIF - Máx 5MB):</label>
-            <input type="file" name="fotoCliente" id="fotoCliente" accept="image/jpeg,image/png,image/gif" required style="padding:10px 0; background-color: transparent; border: none;">
-        </div>
-        <div class="form-group">
-            <label for="caption">Legenda (Opcional):</label>
-            <input type="text" name="caption" id="caption" placeholder="Descreva o corte ou o cliente">
-        </div>
-        <button type="submit">Enviar Foto</button>
-    </form>
+            <h3>📸 Seu Mural de Fotos</h3>
+            <form action="handle_upload_foto.php" method="post" enctype="multipart/form-data" style="margin-bottom:25px; background-color: #333; padding:15px; border-radius:5px;">
+                <div class="form-group">
+                    <label for="fotoCliente">Adicionar foto ao mural (JPG, PNG, GIF - Máx 5MB):</label>
+                    <input type="file" name="fotoCliente" id="fotoCliente" accept="image/jpeg,image/png,image/gif" required style="padding:10px 0; background-color: transparent; border: none;">
+                </div>
+                <div class="form-group">
+                    <label for="caption">Legenda (Opcional):</label>
+                    <input type="text" name="caption" id="caption" placeholder="Descreva o corte ou o cliente">
+                </div>
+                <button type="submit">Enviar Foto</button>
+            </form>
 
-    <div class="mural-gallery" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
-        <?php if (!empty($fotos_mural)): ?>
-            <?php foreach ($fotos_mural as $foto): ?>
-                <div class="foto-item" style="background-color:#333; padding:10px; border-radius:5px; text-align:center; width: 200px;">
-                    <img src="../<?php echo htmlspecialchars($foto['caminho_imagem']); ?>" alt="<?php echo htmlspecialchars($foto['legenda'] ?? 'Foto do Mural'); ?>" style="width: 100%; height: 180px; object-fit: cover; border-radius: 3px; margin-bottom: 8px;">
-                    <?php if (!empty($foto['legenda'])): ?>
-                        <p style="font-size: 0.85em; color: #ccc; margin-bottom: 5px;"><?php echo htmlspecialchars($foto['legenda']); ?></p>
-                    <?php endif; ?>
-                    <p style="font-size: 0.75em; color: #888;">Enviada em: <?php echo $foto['data_formatada']; ?></p>
-                    </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <p>Você ainda não adicionou nenhuma foto ao seu mural.</p>
-        <?php endif; ?>
+            <div class="mural-gallery" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+                <?php if (!empty($fotos_mural)): ?>
+                    <?php foreach ($fotos_mural as $foto): ?>
+                        <div class="foto-item" style="background-color:#333; padding:10px; border-radius:5px; text-align:center; width: 200px;">
+                            <img src="../<?php echo htmlspecialchars($foto['caminho_imagem']); ?>" alt="<?php echo htmlspecialchars($foto['legenda'] ?? 'Foto do Mural'); ?>" style="width: 100%; height: 180px; object-fit: cover; border-radius: 3px; margin-bottom: 8px;">
+                            <?php if (!empty($foto['legenda'])): ?>
+                                <p style="font-size: 0.85em; color: #ccc; margin-bottom: 5px;"><?php echo htmlspecialchars($foto['legenda']); ?></p>
+                            <?php endif; ?>
+                            <p style="font-size: 0.75em; color: #888;">Enviada em: <?php echo $foto['data_formatada']; ?></p>
+                            </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p>Você ainda não adicionou nenhuma foto ao seu mural.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+
     </div>
-</div>
-
-</div>
 </body>
 </html>
