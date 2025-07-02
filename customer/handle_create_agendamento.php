@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../config/database.php';
+require_once 'includes/email_sender.php'; 
 
 // Define um tempo fixo em minutos para todos os agendamentos.
 // Este valor DEVE ser o mesmo usado em 'get_horarios_disponiveis.php'.
@@ -119,9 +120,48 @@ if ($stmt_insert = $mysqli->prepare($sql_insert)) {
     );
 
     if ($stmt_insert->execute()) {
-        // Sucesso! Define a mensagem e redireciona para o painel principal.
-        $_SESSION['customer_message'] = "Seu horário foi agendado com sucesso para o dia " . $data_hora_agendamento_obj->format('d/m/Y \à\s H:i') . "!";
+            // Sucesso na inserção!
+        $_SESSION['customer_message'] = "Seu horário foi agendado com sucesso...";
         $_SESSION['customer_message_type'] = "success";
+        $email_status_message = '';
+        // --- NOVO: ENVIAR E-MAIL DE CONFIRMAÇÃO ---
+        // Buscar dados necessários para o e-mail
+        $sql_details = "SELECT u.name as barbeiro_nome, s.nome as servico_nome, c.email as cliente_email FROM agendamentos a JOIN users u ON a.barbeiro_id = u.user_id JOIN servicos s ON a.servico_id = s.service_id JOIN users c ON a.cliente_id = c.user_id WHERE a.agendamento_id = ?";
+        $stmt_details = $mysqli->prepare($sql_details);
+        $new_id = $mysqli->insert_id;
+        $stmt_details->bind_param("i", $new_id);
+        $stmt_details->execute();
+        $details = $stmt_details->get_result()->fetch_assoc();
+
+        if ($details) {
+            $email_details = [
+                "Cliente" => $_SESSION['name'],
+                "Barbeiro" => $details['barbeiro_nome'],
+                "Serviço" => $details['servico_nome'],
+                "Data" => $data_hora_agendamento_obj->format('d/m/Y'),
+                "Horário" => $data_hora_agendamento_obj->format('H:i')
+            ];
+            $html_body = generateEmailHTML("Confirmação de Agendamento", "Olá, " . $_SESSION['name'] . "! Seu agendamento foi confirmado com sucesso. Seguem os detalhes:", $email_details);
+        
+            // Chama a função e armazena a resposta
+            $email_response = sendAppointmentEmail($details['cliente_email'], $_SESSION['name'], "✔ Agendamento Confirmado na Barbearia JB", $html_body);
+
+            // Cria a mensagem de status do e-mail
+            if ($email_response['success']) {
+                $email_status_message = "<strong>Status do E-mail:</strong> OK, enviado com sucesso.";
+            } 
+            else {
+                // Em produção, você pode querer mostrar uma mensagem mais simples para o cliente
+                // e registrar o erro detalhado em um arquivo de log.
+                $email_status_message = "<strong>Status do E-mail:</strong> Falhou. <br><small>Detalhes do erro: " . htmlspecialchars($email_response['message']) . "</small>";
+            }
+        } else {
+            $email_status_message = "<strong>Status do E-mail:</strong> Falhou (não foi possível buscar detalhes para o envio).";
+        }
+
+        // Adiciona a mensagem de status do e-mail à mensagem principal da sessão
+        $_SESSION['email_status'] = $email_status_message;
+        
         header("location: dashboard.php");
         exit;
     } else {

@@ -1,4 +1,9 @@
- /* Estilos Gerais */
+*{
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 24px;
+}
+
+/* Estilos Gerais */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #121212;
@@ -185,4 +190,12 @@
             max-height: 200px;
             overflow-y: auto;
         }
-        /* Estilos para os radio buttons de horário... */
+    #texto_recomendacao {
+        width: 80%; /* Ocupa 80% da largura do elemento pai */
+        height: 150px; /* Define uma altura fixa maior */
+        resize: none; /* Impede que o usuário redimensione o campo */
+        color: #FFF;
+        background-color: black;
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 24px; /* Tamanho da fonte */
+}

@@ -16,9 +16,9 @@ $data = $_GET['data'];
 $duracao_servico = DURACAO_FIXA_MINUTOS;
 
 // --- LÓGICA DE CÁLCULO DE HORÁRIOS ---
-$inicio_expediente = new DateTime($data . ' 09:00:00');
-$fim_expediente = new DateTime($data . ' 19:00:00');
-$intervalo_minutos = 15; // O sistema verifica horários a cada 15 minutos
+$inicio_expediente = new DateTime($data . ' 08:00:00');
+$fim_expediente = new DateTime($data . ' 20:00:00');
+$intervalo_minutos = 60; // O sistema verifica horários a cada 15 minutos
 
 // 1. ACESSA O BANCO DE DADOS para buscar agendamentos existentes
 $agendamentos_existentes = [];

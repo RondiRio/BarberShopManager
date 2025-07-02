@@ -22,7 +22,7 @@ if ($result_configs = $mysqli->query($sql_configs)) {
     $result_configs->free();
 }
 
-// 3. BUSCAR LISTA DE BARBEIROS
+// 3. BUSCAR LISTA DE BARBEIROS (usado no agendamento e recomendações)
 $barbeiros_lista = [];
 $sql_barbeiros = "SELECT user_id, name, foto_perfil FROM users WHERE role = 'barber' AND is_active = 1 ORDER BY name ASC";
 if ($result_barbs = $mysqli->query($sql_barbeiros)) {
@@ -53,11 +53,61 @@ if ($agendamento_habilitado) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minha Conta - Barbearia JB</title>
-    <link rel="stylesheet" href="css/estilos.css">
+    <style>
+        /* Estilos Gerais */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #121212; color: #FFF; margin:0; line-height: 1.6; }
+        .customer-header { background-color: #000; color: #FFF; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom:3px solid #f39c12;}
+        .customer-header h1 { margin: 0; font-size: 1.5em; }
+        .customer-header a { color: #FFF; text-decoration: none; }
+        .customer-container { max-width: 900px; margin: 30px auto; padding: 20px; }
+        h2 { color: #f39c12; border-bottom: 1px solid #444; padding-bottom: 10px; margin-top: 0;}
+        .section { margin-bottom: 40px; background-color: #1E1E1E; padding: 25px; border-radius: 8px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; }
+        .form-group select, .form-group textarea, .form-group input { width: 100%; padding: 12px; background-color: #333; border: 1px solid #555; color: #FFF; border-radius: 4px; font-size: 1em; box-sizing: border-box; }
+        .form-group button { width: auto; cursor: pointer; background-color: #f39c12; color: #000; font-weight: bold; padding: 10px 20px; border: none; border-radius: 5px; }
+
+        /* Estilo específico para o textarea de recomendação */
+        #texto_recomendacao { width: 80%; height: 150px; resize: vertical; }
+
+        /* Agendar Horário */
+        .barber-selection-container { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 15px; }
+        .barber-card { background-color: #282828; border-radius: 8px; text-align: center; padding: 20px; width: calc(33.333% - 27px); box-sizing: border-box; transition: transform 0.2s; }
+        .barber-card:hover { transform: translateY(-5px); }
+        .barber-card img { width: 120px; height: 120px; border-radius: 50%; border: 3px solid #f39c12; object-fit: cover; margin-bottom: 15px; }
+        .barber-card h3 { margin: 0 0 15px 0; font-size: 1.2em; }
+        .barber-card .button { display: inline-block; background-color: #f39c12; color: #000; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; }
+
+        /* Meus Agendamentos */
+        .appointments-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .appointments-table th, .appointments-table td { padding: 15px; text-align: left; border-bottom: 1px solid #333; }
+        .appointments-table th { color: #f39c12; text-transform: uppercase; font-size: 0.8em; }
+        .appointments-table td { color: #ddd; vertical-align: middle; }
+        .action-link { text-decoration: none; font-weight: bold; font-size: 0.9em; padding: 6px 12px; border-radius: 4px; border: none; cursor: pointer; }
+        .edit-button { color: #FFF; background-color: #3498db; }
+        .cancel-button { color: #FFF; background-color: #c0392b; margin-left: 10px; }
+
+        /* Mensagens de Feedback */
+        .message { padding: 15px; margin-bottom: 20px; border-radius: 5px 5px 0 0; text-align: center; font-weight: bold; }
+        .message.success { background-color: #27ae60; color: white; }
+        .message.error { background-color: #c0392b; color: white; }
+        .email-status { padding: 10px; margin-top: -20px; margin-bottom: 20px; border-radius: 0 0 5px 5px; border: 1px solid; border-top: none; font-size: 0.9em; }
+        .email-status.status-ok { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .email-status.status-error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .email-status small { color: #555; }
+
+        /* Modais */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background-color: #1E1E1E; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; position: relative; }
+        .modal-close { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .modal-content h3 { color: #f39c12; margin-top:0; }
+        #horarios-disponiveis-modal { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; max-height: 200px; overflow-y: auto; }
+    </style>
 </head>
 <body>
     <header class="customer-header">
-        <h1>Barbearia JB - <?php print_r($_SESSION['name'])?></h1>
+        <h1>Barbearia JB - Minha Conta</h1>
         <div>
             <span>Olá, <?php echo htmlspecialchars($cliente_nome); ?>!</span>
             <a href="../logout.php" style="margin-left: 20px;">Sair</a>
@@ -65,7 +115,22 @@ if ($agendamento_habilitado) {
     </header>
 
     <div class="customer-container">
-        <div id="notification-area" style="display: none;"></div>
+        <div id="notification-area">
+             <?php
+                if (isset($_SESSION['customer_message'])) {
+                    $message_type = $_SESSION['customer_message_type'] ?? 'success';
+                    echo '<div class="message ' . htmlspecialchars($message_type) . '">' . htmlspecialchars($_SESSION['customer_message']) . '</div>';
+                    unset($_SESSION['customer_message']);
+                    unset($_SESSION['customer_message_type']);
+
+                    if (isset($_SESSION['email_status'])) {
+                        $status_class = ($message_type === 'success') ? 'status-ok' : 'status-error';
+                        echo '<div class="email-status ' . $status_class . '">' . $_SESSION['email_status'] . '</div>';
+                        unset($_SESSION['email_status']);
+                    }
+                }
+            ?>
+        </div>
         
         <?php if ($agendamento_habilitado && $agendamento_online_permitido): ?>
             <section class="section">
@@ -112,6 +177,29 @@ if ($agendamento_habilitado) {
                 </div>
             </section>
         <?php endif; ?>
+
+        <section class="section">
+            <h2>✍️ Deixar uma Recomendação</h2>
+            <p>Sua opinião é muito importante para nós e ajuda outros clientes!</p>
+            <form action="handle_add_recomendacao.php" method="POST">
+                <div class="form-group">
+                    <label for="barbeiro_id">Sobre qual barbeiro é a sua recomendação?</label>
+                    <select name="barbeiro_id" id="barbeiro_id" required>
+                        <option value="">Selecione um profissional</option>
+                        <?php foreach($barbeiros_lista as $barbeiro): ?>
+                            <option value="<?php echo $barbeiro['user_id']; ?>"><?php echo htmlspecialchars($barbeiro['name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="texto_recomendacao">Escreva seu comentário:</label>
+                    <textarea name="texto_recomendacao" id="texto_recomendacao" required placeholder="Fale sobre o atendimento, o corte, a limpeza, o ambiente..."></textarea>
+                </div>
+                <div class="form-group">
+                    <button type="submit">Enviar Recomendação</button>
+                </div>
+            </form>
+        </section>
     </div>
 
     <div id="modal-cancelar" class="modal">
@@ -125,7 +213,6 @@ if ($agendamento_habilitado) {
             </form>
         </div>
     </div>
-
     <div id="modal-editar" class="modal">
         <div class="modal-content">
             <span class="modal-close" data-modal="modal-editar">&times;</span>
@@ -145,19 +232,23 @@ if ($agendamento_habilitado) {
             </form>
         </div>
     </div>
-
+    
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const mainContainer = document.querySelector('.customer-container');
     const modalEditar = document.getElementById('modal-editar');
     const modalCancelar = document.getElementById('modal-cancelar');
 
-    // Função genérica para notificação
     function showNotification(message, type = 'success') {
-        alert(message); // Simples, substitua por um toast mais elegante se desejar
+        const area = document.getElementById('notification-area');
+        const notification = document.createElement('div');
+        notification.className = `message ${type}`;
+        notification.textContent = message;
+        area.innerHTML = ''; // Limpa notificações antigas
+        area.appendChild(notification);
+        area.style.display = 'block';
     }
 
-    // --- CONTROLE DOS MODAIS ---
     function abrirModal(modal) { modal.classList.add('active'); }
     function fecharModais() {
         modalEditar.classList.remove('active');
@@ -165,26 +256,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     mainContainer.addEventListener('click', function(e) {
-        if (e.target.matches('.edit-button')) {
-            const row = e.target.closest('tr');
-            document.getElementById('editar-agendamento-id').value = e.target.dataset.id;
-            document.getElementById('editar-barbeiro-id').value = e.target.dataset.barbeiroId;
-            document.getElementById('editar-data').value = row.dataset.date;
-            fetchHorarios();
+        const target = e.target;
+        if (target.matches('.edit-button')) {
+            const row = target.closest('tr');
+            document.getElementById('editar-agendamento-id').value = target.dataset.id;
+            document.getElementById('editar-barbeiro-id').value = target.dataset.barbeiroId;
+            const dataInput = document.getElementById('editar-data');
+            dataInput.value = row.dataset.date;
+            dataInput.dispatchEvent(new Event('change')); // Força a busca de horários
             abrirModal(modalEditar);
         }
-        if (e.target.matches('.cancel-button')) {
-            document.getElementById('cancelar-agendamento-id').value = e.target.dataset.id;
+        if (target.matches('.cancel-button')) {
+            document.getElementById('cancelar-agendamento-id').value = target.dataset.id;
             abrirModal(modalCancelar);
         }
     });
 
     document.querySelectorAll('.modal-close').forEach(el => el.addEventListener('click', fecharModais));
-    document.querySelectorAll('.modal').forEach(el => el.addEventListener('click', (e) => {
-        if (e.target === el) fecharModais();
-    }));
+    document.querySelector('.modal').addEventListener('click', (e) => { if(e.target === e.currentTarget) fecharModais() });
+    document.querySelector('#modal-editar').addEventListener('click', (e) => { if(e.target === e.currentTarget) fecharModais() });
 
-    // --- LÓGICA DE EDIÇÃO E AJAX ---
+
     const dataInputEditar = document.getElementById('editar-data');
     const horariosContainerModal = document.getElementById('horarios-disponiveis-modal');
     const btnConfirmarEdicao = document.getElementById('btn-confirmar-edicao');
@@ -208,9 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 horarios.forEach(horario => {
                     const radioId = `horario-modal-${horario.replace(':', '')}`;
-                    horariosContainerModal.innerHTML += `
-                        <label><input type="radio" name="horario" id="${radioId}" value="${horario}" required> <span>${horario}</span></label>
-                    `;
+                    horariosContainerModal.innerHTML += `<label><input type="radio" name="horario" id="${radioId}" value="${horario}" required> <span>${horario}</span></label>`;
                 });
             }
         } catch (e) {
@@ -223,7 +313,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target.name === 'horario') btnConfirmarEdicao.disabled = false;
     });
 
-    // Submeter Formulário de Edição
     document.getElementById('form-editar').addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(this);
@@ -235,10 +324,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (result.success) {
             const id = formData.get('agendamento_id');
             const row = document.getElementById(`agendamento-row-${id}`);
-            const novaData = new Date(formData.get('data') + 'T' + document.querySelector('[name="horario"]:checked').value);
-            row.querySelector('.ag-data').textContent = novaData.toLocaleDateString('pt-BR');
-            row.querySelector('.ag-hora').textContent = novaData.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            row.dataset.date = formData.get('data');
+            const horarioChecado = document.querySelector('#form-editar [name="horario"]:checked');
+            if(row && horarioChecado) {
+                const novaData = new Date(formData.get('data') + 'T' + horarioChecado.value);
+                row.querySelector('.ag-data').textContent = novaData.toLocaleDateString('pt-BR', {timeZone: 'UTC'});
+                row.querySelector('.ag-hora').textContent = novaData.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+                row.dataset.date = formData.get('data');
+            }
             showNotification(result.message, 'success');
         } else {
             showNotification(result.message, 'error');
@@ -246,7 +338,6 @@ document.addEventListener('DOMContentLoaded', function() {
         fecharModais();
     });
 
-    // Submeter Formulário de Cancelamento
     document.getElementById('form-cancelar').addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(this);
@@ -258,9 +349,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (result.success) {
             const id = formData.get('agendamento_id');
             const row = document.getElementById(`agendamento-row-${id}`);
-            row.style.transition = 'opacity 0.5s';
-            row.style.opacity = '0';
-            setTimeout(() => row.remove(), 500);
+            if(row) {
+                row.style.transition = 'opacity 0.5s';
+                row.style.opacity = '0';
+                setTimeout(() => row.remove(), 500);
+            }
             showNotification(result.message, 'success');
         } else {
             showNotification(result.message, 'error');
@@ -269,6 +362,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
 </body>
 </html>

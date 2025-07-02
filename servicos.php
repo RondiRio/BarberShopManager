@@ -21,9 +21,7 @@ if ($result = $mysqli->query($sql)) {
     }
     $result->free();
 } else {
-    // Para depuração, se a query falhar:
-    // echo "Erro ao buscar serviços: " . $mysqli->error;
-    // Você pode querer definir uma mensagem de erro amigável aqui ou logar o erro.
+    echo "Erro ao buscar serviços: " . $mysqli->error;
 }
 $mysqli->close(); // Feche a conexão se não for mais usada nesta página (geralmente no final do script)
 ?>
@@ -41,29 +39,11 @@ $mysqli->close(); // Feche a conexão se não for mais usada nesta página (gera
 </head>
 <body>
     <?php include('routes/header.php')?>
-    <!-- <header>
-        <div class="container">
-            <div id="branding">
-                <h1><span class="highlight">Barbearia</span> JB</h1>
-            </div>
-            <nav>
-                <ul>
-                    <li><a href="index.php">Início</a></li>
-                    <li class="current"><a href="servicos.php">Serviços</a></li>
-                    <li><a href="produtos.php">Bebidas</a></li>
-                    <li><a href="recomendacoes.php">Recomendações</a></li>
-                    <li><a href="login.php">Login</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header> -->
-
     <section id="page-title-section">
         <div class="container">
             <h1>Nossos Serviços</h1>
         </div>
     </section>
-
     <div class="container" id="services-list">
         <section class="service-category">
             <h2>Cortes & Cuidados Essenciais</h2>

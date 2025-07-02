@@ -21,7 +21,7 @@ $barbeiro_id = (int)$_GET['barbeiro_id'];
 // --- BUSCAR DADOS ---
 // Busca o nome do barbeiro para exibir na página
 $barbeiro_nome = "";
-$sql_barbeiro = "SELECT name FROM Users WHERE user_id = ? AND role = 'barber' AND is_active = 1";
+$sql_barbeiro = "SELECT name FROM users WHERE user_id = ? AND role = 'barber' AND is_active = 1";
 if ($stmt_barb = $mysqli->prepare($sql_barbeiro)) {
     $stmt_barb->bind_param("i", $barbeiro_id);
     $stmt_barb->execute();

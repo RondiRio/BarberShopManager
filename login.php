@@ -21,7 +21,8 @@
     <script src="js/toogle_menu.js"></script>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'times new roman', Times, serif; /* Fonte padrão */
+            font-size: 24px; /* Tamanho de fonte padrão */
             margin: 0;
             padding: 0;
             background-color: #121212;

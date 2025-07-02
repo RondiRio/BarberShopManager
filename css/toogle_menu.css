@@ -1,4 +1,7 @@
-/* Estilos do Botão Sanduíche e Navegação Responsiva */
+*{
+    font-family: 'Times New Roman', Times, serif; /* Fonte padrão */
+    font-size: 24px; /* Tamanho de fonte padrão */
+}/* Estilos do Botão Sanduíche e Navegação Responsiva */
 header {
     position: relative; /* Para posicionar o botão do menu corretamente */
 }
