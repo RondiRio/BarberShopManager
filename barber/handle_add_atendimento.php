@@ -20,6 +20,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("location: dashboard.php");
         exit;
     }
+        // --- NOVA VERIFICAÇÃO ANTI-DUPLICIDADE ---
+    if (!empty($cliente_nome)) {
+        // Esta query verifica se já existe um atendimento para este barbeiro, no dia de hoje,
+        // com um nome de cliente que soe de forma parecida.
+        $sql_check_dupe = "SELECT atendimento_id FROM atendimentos 
+                        WHERE barbeiro_id = ? 
+                        AND DATE(registrado_em) = CURDATE() 
+                        AND SOUNDEX(cliente_nome) = SOUNDEX(?)";
+        
+        if ($stmt_dupe = $mysqli->prepare($sql_check_dupe)) {
+            $stmt_dupe->bind_param("is", $barbeiro_id, $cliente_nome);
+            $stmt_dupe->execute();
+            $result_dupe = $stmt_dupe->get_result();
+
+            if ($result_dupe->num_rows > 0) {
+                // Se encontrar, retorna um erro para o barbeiro.
+                $_SESSION['form_message'] = "Atenção: Já existe um atendimento para um cliente com nome similar ('" . htmlspecialchars($cliente_nome) . "') hoje. Verifique se não está registrando em duplicidade.";
+                $_SESSION['form_message_type'] = "error";
+                header("location: dashboard.php");
+                exit;
+            }
+            $stmt_dupe->close();
+        }
+    }
+
+// --- FIM DA VERIFICAÇÃO ---
 
     // Buscar o preço do serviço no momento do cadastro para garantir consistência
     $preco_cobrado = 0.00;
